@@ -1,0 +1,12 @@
+D:\Programmierung\TBOS-Trainer\TBOS-Trainer\obj\Debug\TBOS-Trainer.csprojAssemblyReference.cache
+D:\Programmierung\TBOS-Trainer\TBOS-Trainer\obj\Debug\TBOS_Trainer.Form1.resources
+D:\Programmierung\TBOS-Trainer\TBOS-Trainer\obj\Debug\TBOS_Trainer.Properties.Resources.resources
+D:\Programmierung\TBOS-Trainer\TBOS-Trainer\obj\Debug\TBOS-Trainer.csproj.GenerateResource.cache
+D:\Programmierung\TBOS-Trainer\TBOS-Trainer\obj\Debug\TBOS-Trainer.csproj.CoreCompileInputs.cache
+D:\Programmierung\TBOS-Trainer\TBOS-Trainer\bin\Debug\TBOS-Trainer.exe.config
+D:\Programmierung\TBOS-Trainer\TBOS-Trainer\bin\Debug\TBOS-Trainer.exe
+D:\Programmierung\TBOS-Trainer\TBOS-Trainer\bin\Debug\TBOS-Trainer.pdb
+D:\Programmierung\TBOS-Trainer\TBOS-Trainer\bin\Debug\Memory.dll
+D:\Programmierung\TBOS-Trainer\TBOS-Trainer\obj\Debug\TBOS-Trainer.csproj.CopyComplete
+D:\Programmierung\TBOS-Trainer\TBOS-Trainer\obj\Debug\TBOS-Trainer.exe
+D:\Programmierung\TBOS-Trainer\TBOS-Trainer\obj\Debug\TBOS-Trainer.pdb
