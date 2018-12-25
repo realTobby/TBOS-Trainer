@@ -9,10 +9,13 @@ namespace TBOS_Trainer
     {
         public Mem m = new Mem();
 
+        public long PLAYER_BASE_ADDRESS = 0;
+
         public bool APPLICATION_RUNNING = false;
 
-        public uint PLAYERBASE_ADDRESS = 0x15271A18;
+        public bool PLAYERBASE_FOUND = false;
 
+        bool IsaacOpen = false;
 
         public Form1()
         {
@@ -22,8 +25,7 @@ namespace TBOS_Trainer
         private void Form1_Load(object sender, EventArgs e)
         {
             APPLICATION_RUNNING = true;
-            backgroundWorker1.WorkerSupportsCancellation = true;
-            if (!backgroundWorker1.IsBusy)
+            if(!backgroundWorker1.IsBusy)
             {
                 backgroundWorker1.RunWorkerAsync();
             }
@@ -36,52 +38,96 @@ namespace TBOS_Trainer
                 while (APPLICATION_RUNNING)
                 {
                     int IsaacId = m.getProcIDFromName("isaac-ng");
-                    bool IsaacOpen = false;
                     if (IsaacId > 0)
-                        IsaacOpen = m.OpenGameProcess(IsaacId);
+                        IsaacOpen = m.OpenProcess(IsaacId);
 
                     if (IsaacOpen == true)
                     {
                         this.Invoke(new MethodInvoker(() => this.label1.Text = "Found Binding of Isaac: Rebirth"));
                         this.Invoke(new MethodInvoker(() => this.label1.ForeColor = Color.Green));
+
                         ExecuteHacks();
+
                     }
                     else
                     {
                         this.Invoke(new MethodInvoker(() => this.label1.Text = "STATUS: Waiting for Binding of Isaac: Rebirth"));
                     }
                 }
-            }catch(Exception ex)
+            }
+            catch(Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
+
         }
 
         private void ExecuteHacks()
         {
-            if(chb_godmode.Checked == true)
+            while (true)
             {
-                m.writeMemory("base+0xB50", "byte", "24");
-                m.writeMemory("base+0xB54", "byte", "24");
-            }
+                if (PLAYERBASE_FOUND == false)
+                {
+                    FindPlayerBase();
+                    PLAYERBASE_FOUND = true;
+                }
+
+                // GOD MODE
+                if (chb_GodMode.Checked)
+                {
+                    long tmpPlayerBase = PLAYER_BASE_ADDRESS;
+                    m.writeMemory(tmpPlayerBase.ToString("x8"), "byte", "0x" + Convert.ToInt64(24).ToString("X"));
+                    tmpPlayerBase += 4;
+                    m.writeMemory(tmpPlayerBase.ToString("x8"), "byte", "0x" + Convert.ToInt64(24).ToString("X"));
+                }
+
+                if (chb_energy.Checked)
+                {
+                    long tmpPlayerBase = PLAYER_BASE_ADDRESS;
+                    tmpPlayerBase += 380;
+                    Console.WriteLine(tmpPlayerBase.ToString());
+                    m.writeMemory(tmpPlayerBase.ToString("x8"), "byte", "0x" + Convert.ToInt64(6).ToString("X"));
+                }
+
+
+                // 154
+
+
+            }        
         }
 
-        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        public void FindPlayerBase()
         {
-            backgroundWorker1.CancelAsync();
-            APPLICATION_RUNNING = false;
-            
+            var playerScan = m.AoBScan("0", 0xffffffff, "?? ?? ?? ?? ?? 00 00 00 ?? 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? 00 00 03 00 00 00 ?? ?? ?? ?? 00 00 00 00 ?? 00 00 00 ?? ?? ?? ?? ?? 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF FF FF ?? 00 00 00");
+            PLAYER_BASE_ADDRESS = playerScan.Result;
+            PLAYER_BASE_ADDRESS -= 36;
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            /*
-            long res = m.AoBScan(0x00000000, 0x9999999, "8B 82 68 0B 00 00").ToInt32();
-            MessageBox.Show(res.ToString("x8"));
-            */
+            FindPlayerBase();
+            label2.Text = "Player address: " + PLAYER_BASE_ADDRESS;
+            EnableHacks();
+        }
 
-            for(int i=0; i<25500; i++)
-                Console.WriteLine(m.readByte(i.ToString()) + "," + Environment.NewLine);
+        private void DisableHacks()
+        {
+            chb_energy.Enabled = false;
+            chb_GodMode.Enabled = false;
+        }
+
+        private void EnableHacks()
+        {
+            chb_energy.Enabled = true;
+            chb_GodMode.Enabled = true;
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            long tmpPlayerBase = PLAYER_BASE_ADDRESS;
+            tmpPlayerBase += 376;
+            Console.WriteLine(tmpPlayerBase.ToString());
+            m.writeMemory(tmpPlayerBase.ToString("x8"), "byte", "0x" + Convert.ToInt64(tbx_itemid.Text).ToString("X"));
         }
     }
 }
