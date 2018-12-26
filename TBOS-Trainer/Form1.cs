@@ -17,6 +17,8 @@ namespace TBOS_Trainer
 
         bool IsaacOpen = false;
 
+        public Random rnd = new Random();
+
         public Form1()
         {
             InitializeComponent();
@@ -25,9 +27,14 @@ namespace TBOS_Trainer
         private void Form1_Load(object sender, EventArgs e)
         {
             APPLICATION_RUNNING = true;
-            if(!backgroundWorker1.IsBusy)
+            if (!backgroundWorker1.IsBusy)
             {
                 backgroundWorker1.RunWorkerAsync();
+            }
+
+            if (!backgroundWorker2.IsBusy)
+            {
+                backgroundWorker2.RunWorkerAsync();
             }
         }
 
@@ -62,37 +69,70 @@ namespace TBOS_Trainer
 
         }
 
+        // RESEARCH OFFSETS
+        // Fire rate => 144
+        // DMG => 160
+        // Range => 164
+        // Range multiplier => 94
+        // Shot height => 168
+        // tier color1 => 184
+        // tier color2 => 188
+        // movement speed => 356
+        // luck => 360
+
+
+        // position teleport
+        // -1852 x
+        // -1848 y
+
         private void ExecuteHacks()
         {
             while (true)
             {
-                if (PLAYERBASE_FOUND == false)
+                if (PLAYERBASE_FOUND)
+                {
+                    if (chb_GodMode.Checked)
+                    {
+                        long tmpPlayerBase = PLAYER_BASE_ADDRESS;
+                        tmpPlayerBase += 4;
+                        m.writeMemory(tmpPlayerBase.ToString("x8"), "byte", "0x" + Convert.ToInt64(24).ToString("X"));
+                    }
+
+                    if (chb_energy.Checked)
+                    {
+                        long tmpPlayerBase = PLAYER_BASE_ADDRESS;
+                        tmpPlayerBase += 380;
+                        m.writeMemory(tmpPlayerBase.ToString("x8"), "byte", "0x" + Convert.ToInt64(tbx_maxEnergy.Text).ToString("X"));
+                    }
+
+                    if (chb_coins.Checked)
+                    {
+                        long tmpPlayerBase = PLAYER_BASE_ADDRESS;
+                        tmpPlayerBase += 36;
+                        Console.WriteLine(tmpPlayerBase.ToString("x8"));
+                        m.writeMemory(tmpPlayerBase.ToString("x8"), "byte", "0x" + Convert.ToInt64(99).ToString("X"));
+                    }
+
+                    if (chb_bombs.Checked)
+                    {
+                        long tmpPlayerBase = PLAYER_BASE_ADDRESS;
+                        tmpPlayerBase += 32;
+                        Console.WriteLine(tmpPlayerBase.ToString("x8"));
+                        m.writeMemory(tmpPlayerBase.ToString("x8"), "byte", "0x" + Convert.ToInt64(99).ToString("X"));
+                    }
+
+                    if (chb_bombs.Checked)
+                    {
+                        long tmpPlayerBase = PLAYER_BASE_ADDRESS;
+                        tmpPlayerBase += 24;
+                        Console.WriteLine(tmpPlayerBase.ToString("x8"));
+                        m.writeMemory(tmpPlayerBase.ToString("x8"), "byte", "0x" + Convert.ToInt64(99).ToString("X"));
+                    }
+                }
+                else
                 {
                     FindPlayerBase();
-                    PLAYERBASE_FOUND = true;
                 }
-
-                // GOD MODE
-                if (chb_GodMode.Checked)
-                {
-                    long tmpPlayerBase = PLAYER_BASE_ADDRESS;
-                    m.writeMemory(tmpPlayerBase.ToString("x8"), "byte", "0x" + Convert.ToInt64(24).ToString("X"));
-                    tmpPlayerBase += 4;
-                    m.writeMemory(tmpPlayerBase.ToString("x8"), "byte", "0x" + Convert.ToInt64(24).ToString("X"));
-                }
-
-                if (chb_energy.Checked)
-                {
-                    long tmpPlayerBase = PLAYER_BASE_ADDRESS;
-                    tmpPlayerBase += 380;
-                    Console.WriteLine(tmpPlayerBase.ToString());
-                    m.writeMemory(tmpPlayerBase.ToString("x8"), "byte", "0x" + Convert.ToInt64(6).ToString("X"));
-                }
-
-
-                // 154
-
-
             }        
         }
 
@@ -101,6 +141,12 @@ namespace TBOS_Trainer
             var playerScan = m.AoBScan("0", 0xffffffff, "?? ?? ?? ?? ?? 00 00 00 ?? 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? 00 00 03 00 00 00 ?? ?? ?? ?? 00 00 00 00 ?? 00 00 00 ?? ?? ?? ?? ?? 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF FF FF ?? 00 00 00");
             PLAYER_BASE_ADDRESS = playerScan.Result;
             PLAYER_BASE_ADDRESS -= 36;
+
+            if(PLAYER_BASE_ADDRESS != -36  )
+            {
+                PLAYERBASE_FOUND = true;
+            }
+
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -128,6 +174,54 @@ namespace TBOS_Trainer
             tmpPlayerBase += 376;
             Console.WriteLine(tmpPlayerBase.ToString());
             m.writeMemory(tmpPlayerBase.ToString("x8"), "byte", "0x" + Convert.ToInt64(tbx_itemid.Text).ToString("X"));
+        }
+
+        private void backgroundWorker2_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
+        {
+            while (true)
+            {
+                if(PLAYERBASE_FOUND)
+                {
+                    string coord = "";
+
+                    long xCoord = PLAYER_BASE_ADDRESS - 1852;
+                    long yCoord = PLAYER_BASE_ADDRESS - 1848;
+
+                    // PULL X Y COORDINATES
+                    float x = m.readFloat((xCoord.ToString("x8")).ToString());
+                    float y = m.readFloat((yCoord.ToString("x8")).ToString());
+                    coord = x + "/" + y;
+                    try
+                    {
+                        this.Invoke(new Action(() => this.lbl_coord.Text = coord));
+                    }
+                    catch (Exception idc)
+                    {
+                        Console.WriteLine("idc: " + idc.Message);
+                    }
+
+                    if (toggledTP)
+                    {
+                        m.writeMemory(xCoord.ToString("x8"), "float", GetRandomNumber(0, 500).ToString());
+                        m.writeMemory(yCoord.ToString("x8"), "float", GetRandomNumber(0, 500).ToString());
+                    }
+                }
+                
+            }
+        }
+
+        public double GetRandomNumber(double minimum, double maximum)
+        {
+            return rnd.NextDouble() * (maximum - minimum) + minimum;
+        }
+
+
+        public bool toggledTP = false;
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            toggledTP = !toggledTP;
+
         }
     }
 }
