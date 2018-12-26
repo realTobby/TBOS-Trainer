@@ -1,21 +1,14 @@
 ﻿using System;
 using System.Drawing;
+using System.Threading;
 using System.Windows.Forms;
-using Memory;
+using TBOS_Trainer.Trainer;
 
 namespace TBOS_Trainer
 {
     public partial class Form1 : Form
     {
-        public Mem m = new Mem();
-
-        public long PLAYER_BASE_ADDRESS = 0;
-
-        public bool APPLICATION_RUNNING = false;
-
-        public bool PLAYERBASE_FOUND = false;
-
-        bool IsaacOpen = false;
+        const int SLEEP_DELAY = 250;
 
         public Random rnd = new Random();
 
@@ -26,7 +19,8 @@ namespace TBOS_Trainer
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            APPLICATION_RUNNING = true;
+            Program.ApplicationRunning = true;
+
             if (!backgroundWorker1.IsBusy)
             {
                 backgroundWorker1.RunWorkerAsync();
@@ -40,33 +34,24 @@ namespace TBOS_Trainer
 
         private void backgroundWorker1_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
-            try
+            while (Program.ApplicationRunning)
             {
-                while (APPLICATION_RUNNING)
+                if (Context.Attached)
                 {
-                    int IsaacId = m.getProcIDFromName("isaac-ng");
-                    if (IsaacId > 0)
-                        IsaacOpen = m.OpenProcess(IsaacId);
+                    Invoke(new MethodInvoker(() => label1.Text = "Found Binding of Isaac: Rebirth"));
+                    Invoke(new MethodInvoker(() => label1.ForeColor = Color.Green));
 
-                    if (IsaacOpen == true)
-                    {
-                        this.Invoke(new MethodInvoker(() => this.label1.Text = "Found Binding of Isaac: Rebirth"));
-                        this.Invoke(new MethodInvoker(() => this.label1.ForeColor = Color.Green));
-
-                        ExecuteHacks();
-
-                    }
-                    else
-                    {
-                        this.Invoke(new MethodInvoker(() => this.label1.Text = "STATUS: Waiting for Binding of Isaac: Rebirth"));
-                    }
+                    ExecuteHacks();
                 }
-            }
-            catch(Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
+                else
+                {
+                    Invoke(new MethodInvoker(() => label1.Text = "STATUS: Waiting for Binding of Isaac: Rebirth"));
 
+                    Context.Attach();
+                }
+
+                Thread.Sleep(SLEEP_DELAY);
+            }
         }
 
         // RESEARCH OFFSETS
@@ -89,70 +74,51 @@ namespace TBOS_Trainer
         {
             while (true)
             {
-                if (PLAYERBASE_FOUND)
+                if (Addresses.PlayerBaseAddressFound)
                 {
                     if (chb_GodMode.Checked)
                     {
-                        long tmpPlayerBase = PLAYER_BASE_ADDRESS;
+                        long tmpPlayerBase = Addresses.PLAYER_BASE_ADDRESS;
                         tmpPlayerBase += 4;
-                        m.writeMemory(tmpPlayerBase.ToString("x8"), "byte", "0x" + Convert.ToInt64(24).ToString("X"));
+                        Program.Memory.writeMemory(tmpPlayerBase.ToString("x8"), "byte", "0x" + Convert.ToInt64(24).ToString("X"));
                     }
 
                     if (chb_energy.Checked)
                     {
-                        long tmpPlayerBase = PLAYER_BASE_ADDRESS;
+                        long tmpPlayerBase = Addresses.PLAYER_BASE_ADDRESS;
                         tmpPlayerBase += 380;
-                        m.writeMemory(tmpPlayerBase.ToString("x8"), "byte", "0x" + Convert.ToInt64(tbx_maxEnergy.Text).ToString("X"));
+                        Program.Memory.writeMemory(tmpPlayerBase.ToString("x8"), "byte", "0x" + Convert.ToInt64(tbx_maxEnergy.Text).ToString("X"));
                     }
 
                     if (chb_coins.Checked)
                     {
-                        long tmpPlayerBase = PLAYER_BASE_ADDRESS;
+                        long tmpPlayerBase = Addresses.PLAYER_BASE_ADDRESS;
                         tmpPlayerBase += 36;
-                        Console.WriteLine(tmpPlayerBase.ToString("x8"));
-                        m.writeMemory(tmpPlayerBase.ToString("x8"), "byte", "0x" + Convert.ToInt64(99).ToString("X"));
+                        Program.Memory.writeMemory(tmpPlayerBase.ToString("x8"), "byte", "0x" + Convert.ToInt64(99).ToString("X"));
                     }
 
                     if (chb_bombs.Checked)
                     {
-                        long tmpPlayerBase = PLAYER_BASE_ADDRESS;
+                        long tmpPlayerBase = Addresses.PLAYER_BASE_ADDRESS;
                         tmpPlayerBase += 32;
-                        Console.WriteLine(tmpPlayerBase.ToString("x8"));
-                        m.writeMemory(tmpPlayerBase.ToString("x8"), "byte", "0x" + Convert.ToInt64(99).ToString("X"));
+                        Program.Memory.writeMemory(tmpPlayerBase.ToString("x8"), "byte", "0x" + Convert.ToInt64(99).ToString("X"));
                     }
 
                     if (chb_bombs.Checked)
                     {
-                        long tmpPlayerBase = PLAYER_BASE_ADDRESS;
+                        long tmpPlayerBase = Addresses.PLAYER_BASE_ADDRESS;
                         tmpPlayerBase += 24;
-                        Console.WriteLine(tmpPlayerBase.ToString("x8"));
-                        m.writeMemory(tmpPlayerBase.ToString("x8"), "byte", "0x" + Convert.ToInt64(99).ToString("X"));
+                        Program.Memory.writeMemory(tmpPlayerBase.ToString("x8"), "byte", "0x" + Convert.ToInt64(99).ToString("X"));
                     }
                 }
-                else
-                {
-                    FindPlayerBase();
-                }
+
+                Thread.Sleep(SLEEP_DELAY);
             }        
-        }
-
-        public void FindPlayerBase()
-        {
-            var playerScan = m.AoBScan("0", 0xffffffff, "?? ?? ?? ?? ?? 00 00 00 ?? 00 00 00 00 00 00 00 ?? ?? ?? ?? ?? ?? 00 00 03 00 00 00 ?? ?? ?? ?? 00 00 00 00 ?? 00 00 00 ?? ?? ?? ?? ?? 00 00 00 00 00 00 00 00 00 00 00 ?? ?? ?? ?? 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF FF FF ?? 00 00 00");
-            PLAYER_BASE_ADDRESS = playerScan.Result;
-            PLAYER_BASE_ADDRESS -= 36;
-
-            if(PLAYER_BASE_ADDRESS != -36  )
-            {
-                PLAYERBASE_FOUND = true;
-            }
-
         }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            FindPlayerBase();
-            label2.Text = "Player address: " + PLAYER_BASE_ADDRESS;
+            label2.Text = "Player address: " + Addresses.PLAYER_BASE_ADDRESS;
             EnableHacks();
         }
 
@@ -170,30 +136,29 @@ namespace TBOS_Trainer
 
         private void button2_Click(object sender, EventArgs e)
         {
-            long tmpPlayerBase = PLAYER_BASE_ADDRESS;
+            long tmpPlayerBase = Addresses.PLAYER_BASE_ADDRESS;
             tmpPlayerBase += 376;
-            Console.WriteLine(tmpPlayerBase.ToString());
-            m.writeMemory(tmpPlayerBase.ToString("x8"), "byte", "0x" + Convert.ToInt64(tbx_itemid.Text).ToString("X"));
+            Program.Memory.writeMemory(tmpPlayerBase.ToString("x8"), "byte", "0x" + Convert.ToInt64(tbx_itemid.Text).ToString("X"));
         }
 
         private void backgroundWorker2_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
             while (true)
             {
-                if(PLAYERBASE_FOUND)
+                if(Addresses.PlayerBaseAddressFound)
                 {
                     string coord = "";
 
-                    long xCoord = PLAYER_BASE_ADDRESS - 1852;
-                    long yCoord = PLAYER_BASE_ADDRESS - 1848;
+                    long xCoord = Addresses.PLAYER_BASE_ADDRESS - 1852;
+                    long yCoord = Addresses.PLAYER_BASE_ADDRESS - 1848;
 
                     // PULL X Y COORDINATES
-                    float x = m.readFloat((xCoord.ToString("x8")).ToString());
-                    float y = m.readFloat((yCoord.ToString("x8")).ToString());
+                    float x = Program.Memory.readFloat((xCoord.ToString("x8")).ToString());
+                    float y = Program.Memory.readFloat((yCoord.ToString("x8")).ToString());
                     coord = x + "/" + y;
                     try
                     {
-                        this.Invoke(new Action(() => this.lbl_coord.Text = coord));
+                        Invoke(new Action(() => this.lbl_coord.Text = coord));
                     }
                     catch (Exception idc)
                     {
@@ -202,11 +167,12 @@ namespace TBOS_Trainer
 
                     if (toggledTP)
                     {
-                        m.writeMemory(xCoord.ToString("x8"), "float", GetRandomNumber(0, 500).ToString());
-                        m.writeMemory(yCoord.ToString("x8"), "float", GetRandomNumber(0, 500).ToString());
+                        Program.Memory.writeMemory(xCoord.ToString("x8"), "float", GetRandomNumber(0, 500).ToString());
+                        Program.Memory.writeMemory(yCoord.ToString("x8"), "float", GetRandomNumber(0, 500).ToString());
                     }
                 }
-                
+
+                Thread.Sleep(SLEEP_DELAY);
             }
         }
 
@@ -215,14 +181,11 @@ namespace TBOS_Trainer
             return rnd.NextDouble() * (maximum - minimum) + minimum;
         }
 
-
         public bool toggledTP = false;
 
         private void button3_Click(object sender, EventArgs e)
         {
             toggledTP = !toggledTP;
-
         }
     }
 }
-
