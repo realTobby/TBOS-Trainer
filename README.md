@@ -1,5 +1,7 @@
 # TBOS-Trainer
-First attempt to create a game Trainer for the game The binding of Isaac: Rebirth
+Game Trainer for the Game Binding of Isaac: Rebirth
+Addresses and Offsets found with Cheat Engine
+
 
 ![Screenshot Trainer "General"](https://github.com/xSillusx/TBOS-Trainer/blob/master/trainer1.PNG)
 
